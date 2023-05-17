@@ -1,6 +1,6 @@
 # InteractionTestExample
 ## The project
-This project is meant for demonstration purposes. It shows how InterACt can be used to test the integration of component-based software systems.
+This project is meant for demonstration purposes. It shows how [InterACt](https://github.com/NilsWild/InterACt) can be used to test the integration of component-based software systems.
 It consists of three components:
 - BankingComponent
 - IbanValidator
