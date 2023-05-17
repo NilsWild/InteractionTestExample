@@ -9,6 +9,8 @@ It consists of three components:
 Each of these components is implemented using Spring-Boot-Rest. The BankingComponent takes transfer requests and uses the other two components to validate the transfer request.
 Two different flow were implemented. The v1 API calls the IbanValidator and AmountController one after the other, whereas the v2 API calls the IbanValidator which calls the ValueValidator in return. This can be seen in the sequence diagrams below:
 
+![Money Transfer V1](MoneyTransferV1.svg)
+![Money Transfer V2](MoneyTransferV2.svg)
 
 ## The tests
 For each of the two flows, tests are provided on the component level. The test use mocks to test the functionality of each component in isolation. 
