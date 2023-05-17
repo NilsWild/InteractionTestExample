@@ -7,10 +7,10 @@ It consists of three components:
 - AmountValidator
 
 Each of these components is implemented using Spring-Boot-Rest. The BankingComponent takes transfer requests and uses the other two components to validate the transfer request.
-Two different flow were implemented. The v1 API calls the IbanValidator and AmountController one after the other, whereas the v2 API calls the IbanValidator which calls the ValueValidator in return. This can be seen in the sequence diagrams below:
+Two different flow were implemented. The v1 API calls the IbanValidator and AmountController one after the other, whereas the v2 API calls the IbanValidator which calls the AmountValidator in return. This can be seen in the sequence diagrams below:
 
-![Money Transfer V1](MoneyTransferV1.svg)
-![Money Transfer V2](MoneyTransferV2.svg)
+![Money Transfer V1](MoneyTransferAPIv1.svg)
+![Money Transfer V2](MoneyTransferAPIv2.svg)
 
 ## The tests
 For each of the two flows, tests are provided on the component level. The test use mocks to test the functionality of each component in isolation. 
@@ -26,4 +26,4 @@ To run interaction test you need to follow these steps:
 
 ## Detecting integration faults
 You can manipulate components and their tests such that the expectation of a component do not comply with the provided implementation of the other components.
-E.g. change the regular expression in the IbanValidatorController such that it only accepts non formatted IBANs. Or change the amount that is used in the BankingComponents test to some value that is negative and would thus be rejected by the AmountValidator.
+E.g. change the regular expression in the IbanValidatorController such that it only accepts non formatted IBANs. Or change the amount that is used in the BankingComponents test to some amount that is negative and would thus be rejected by the AmountValidator.
