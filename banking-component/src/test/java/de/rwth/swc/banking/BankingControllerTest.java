@@ -2,12 +2,13 @@ package de.rwth.swc.banking;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.rwth.swc.interact.integrator.rest.SpringRestInterACtIntegrationProxyConfiguration;
-import de.rwth.swc.interact.junit.jupiter.InterACt;
+import de.rwth.swc.interact.junit.jupiter.annotation.InterACtTest;
+import de.rwth.swc.interact.junit.jupiter.annotation.Offset;
 import de.rwth.swc.interact.observer.rest.SpringRestInterACtConfiguration;
+import kotlin.Unit;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.aggregator.AggregateWith;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -23,13 +24,14 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static de.rwth.swc.interact.test.ExampleBasedAssertionsKt.forExample;
+import static de.rwth.swc.interact.test.PropertyBasedAssertionsKt.inherently;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import({TestConfig.class, SpringRestInterACtConfiguration.class, SpringRestInterACtIntegrationProxyConfiguration.class})
-@ExtendWith(InterACt.class)
+@Import({TestConfig.class, SpringRestInterACtConfiguration.class})
 class BankingControllerTest {
 
     @Autowired
@@ -47,9 +49,12 @@ class BankingControllerTest {
         mockServer = MockRestServiceServer.bindTo(restTemplate).bufferContent().build();
     }
 
-    @Test
-    public void v1WhenValidTransferIsReceivedShouldReturnTrue() throws URISyntaxException {
-        var transfer = new Transfer(500, "DE93 5001 0517 6966 2689 58");
+    @InterACtTest
+    @CsvSource({"500, DE93 5001 0517 6966 2689 58, true, true"})
+    public void v1WhenValidTransferIsReceivedShouldReturnTrue(
+            @AggregateWith(TransferAggregator.class) Transfer transfer,
+            @Offset(2) boolean ibanValidatorResponse,
+            @Offset(3) boolean amountValidatorResponse) throws URISyntaxException {
 
         mockServer.expect(ExpectedCount.once(),
                         requestTo(new URI("http://localhost:8081/v1/validate/iban")))
@@ -57,7 +62,7 @@ class BankingControllerTest {
                 .andExpect(content().string(transfer.iban))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(String.valueOf(true))
+                        .body(String.valueOf(ibanValidatorResponse))
                 );
         mockServer.expect(ExpectedCount.once(),
                         requestTo(new URI("http://localhost:8082/v1/validate/amount")))
@@ -65,17 +70,27 @@ class BankingControllerTest {
                 .andExpect(content().string("500"))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(String.valueOf(true))
+                        .body(String.valueOf(amountValidatorResponse))
                 );
         var result = testRestTemplate.postForEntity("http://localhost:" + port + "/v1/transfer", transfer,
                 Boolean.class);
-        assertThat(result.getBody()).isEqualTo(true);
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        forExample(() -> {
+            assertThat(result.getBody()).isEqualTo(true);
+            return Unit.INSTANCE;
+        });
+        inherently(() -> {
+            assertThat(result.getBody()).isEqualTo(true);
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            return Unit.INSTANCE;
+        });
     }
 
-    @Test
-    public void v2WhenValidTransferIsReceivedShouldReturnTrue() throws URISyntaxException, JsonProcessingException {
-        var transfer = new Transfer(500, "DE19 5001 0517 5326 8513 68");
+    @InterACtTest
+    @CsvSource({"500, DE19 5001 0517 5326 8513 68, true"})
+    public void v2WhenValidTransferIsReceivedShouldReturnTrue(
+            @AggregateWith(TransferAggregator.class) Transfer transfer,
+            @Offset(2) boolean validationResponse) throws URISyntaxException, JsonProcessingException {
 
         mockServer.expect(ExpectedCount.once(),
                         requestTo(new URI("http://localhost:8081/v2/validate/iban")))
@@ -83,11 +98,15 @@ class BankingControllerTest {
                 .andExpect(content().json(mapper.writeValueAsString(transfer)))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(String.valueOf(true))
+                        .body(String.valueOf(validationResponse))
                 );
         var result = testRestTemplate.postForEntity("http://localhost:" + port + "/v2/transfer", transfer,
                 Boolean.class);
-        assertThat(result.getBody()).isEqualTo(true);
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        inherently(() -> {
+            assertThat(result.getBody()).isEqualTo(true);
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            return Unit.INSTANCE;
+        });
     }
 }
+

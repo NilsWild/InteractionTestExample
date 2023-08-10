@@ -28,10 +28,6 @@
         </dependency>
         <dependency>
             <groupId>de.rwth.swc.interact</groupId>
-            <artifactId>interact-integrator-spring-rest</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.rwth.swc.interact</groupId>
             <artifactId>interact-observer-spring-rest</artifactId>
         </dependency>
         <dependency>
