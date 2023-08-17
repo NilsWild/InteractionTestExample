@@ -50,16 +50,16 @@ class BankingControllerTest {
     }
 
     @InterACtTest
-    @CsvSource({"500, DE93 5001 0517 6966 2689 58, true, true"})
+    @CsvSource({"500, DE93 5001 0517 6966 2689 58, GE13617195993119486971, true, true"})
     public void v1WhenValidTransferIsReceivedShouldReturnTrue(
             @AggregateWith(TransferAggregator.class) Transfer transfer,
-            @Offset(2) boolean ibanValidatorResponse,
-            @Offset(3) boolean amountValidatorResponse) throws URISyntaxException {
+            @Offset(3) boolean ibanValidatorResponse,
+            @Offset(4) boolean amountValidatorResponse) throws URISyntaxException, JsonProcessingException {
 
         mockServer.expect(ExpectedCount.once(),
                         requestTo(new URI("http://localhost:8081/v1/validate/iban")))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(content().string(transfer.iban))
+                .andExpect(content().string(transfer.fromIban))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(String.valueOf(ibanValidatorResponse))
@@ -67,7 +67,7 @@ class BankingControllerTest {
         mockServer.expect(ExpectedCount.once(),
                         requestTo(new URI("http://localhost:8082/v1/validate/amount")))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(content().string("500"))
+                .andExpect(content().json(mapper.writeValueAsString(transfer)))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(String.valueOf(amountValidatorResponse))
@@ -87,10 +87,10 @@ class BankingControllerTest {
     }
 
     @InterACtTest
-    @CsvSource({"500, DE19 5001 0517 5326 8513 68, true"})
+    @CsvSource({"500, DE19 5001 0517 5326 8513 68, GE13617195993119486971, true"})
     public void v2WhenValidTransferIsReceivedShouldReturnTrue(
             @AggregateWith(TransferAggregator.class) Transfer transfer,
-            @Offset(2) boolean validationResponse) throws URISyntaxException, JsonProcessingException {
+            @Offset(3) boolean validationResponse) throws URISyntaxException, JsonProcessingException {
 
         mockServer.expect(ExpectedCount.once(),
                         requestTo(new URI("http://localhost:8081/v2/validate/iban")))

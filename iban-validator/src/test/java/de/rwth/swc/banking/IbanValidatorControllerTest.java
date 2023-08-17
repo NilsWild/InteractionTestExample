@@ -1,5 +1,6 @@
 package de.rwth.swc.banking;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.rwth.swc.interact.junit.jupiter.annotation.InterACtTest;
 import de.rwth.swc.interact.junit.jupiter.annotation.Offset;
@@ -22,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 import static de.rwth.swc.interact.test.PropertyBasedAssertionsKt.inherently;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +40,8 @@ class IbanValidatorControllerTest {
     private int port;
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private IbanValidatorController ibanValidatorController;
     private ObjectMapper mapper = new ObjectMapper();
 
     private MockRestServiceServer mockServer;
@@ -50,6 +54,7 @@ class IbanValidatorControllerTest {
     @InterACtTest
     @CsvSource({"DE89370400440532013000"})
     public void v1WhenValidIbanIsReceivedShouldReturnTrue(String iban) {
+        ibanValidatorController.ibanList.add(iban.replace(" ",""));
 
         var result = testRestTemplate.postForEntity("http://localhost:" + port + "/v1/validate/iban", iban,
                 Boolean.class);
@@ -58,18 +63,34 @@ class IbanValidatorControllerTest {
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             return Unit.INSTANCE;
         });
+
+        ibanValidatorController.ibanList = new ArrayList<>();
     }
 
     @InterACtTest
-    @CsvSource({"500, DE33500105173249718433, true"})
+    @CsvSource({"DE89370400440532013000"})
+    public void v1WhenInvalidIbanIsReceivedShouldReturnFalse(String iban) {
+        var result = testRestTemplate.postForEntity("http://localhost:" + port + "/v1/validate/iban", iban,
+                Boolean.class);
+        inherently(() -> {
+            assertThat(result.getBody()).isEqualTo(false);
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            return Unit.INSTANCE;
+        });
+    }
+
+    @InterACtTest
+    @CsvSource({"300, DE33500105173249718433, EE441295895115123636, true"})
     public void v2WhenValidTransferIsReceivedShouldReturnTrue(
             @AggregateWith(TransferAggregator.class) Transfer transfer,
-            @Offset(2) boolean amountValidationResponse) throws URISyntaxException {
+            @Offset(3) boolean amountValidationResponse) throws URISyntaxException, JsonProcessingException {
+
+        ibanValidatorController.ibanList.add(transfer.fromIban.replace(" ",""));
 
         mockServer.expect(ExpectedCount.once(),
                         requestTo(new URI("http://localhost:8082/v1/validate/amount")))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(content().string(transfer.amount.toString()))
+                .andExpect(content().json(mapper.writeValueAsString(transfer)))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(String.valueOf(amountValidationResponse))
@@ -82,18 +103,22 @@ class IbanValidatorControllerTest {
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             return Unit.INSTANCE;
         });
+
+        ibanValidatorController.ibanList = new ArrayList<>();
     }
 
     @InterACtTest
-    @CsvSource({"500, DE33500105173249718433, false"})
+    @CsvSource({"300, DE33500105173249718433, EE441295895115123636, false"})
     void v2WhenTransferWithValidIbanButInvalidAmountIsReceivedShouldReturnFalse(
             @AggregateWith(TransferAggregator.class) Transfer transfer,
-            @Offset(2) boolean amountValidationResponse) throws URISyntaxException {
+            @Offset(3) boolean amountValidationResponse) throws URISyntaxException, JsonProcessingException {
+
+        ibanValidatorController.ibanList.add(transfer.fromIban.replace(" ",""));
 
         mockServer.expect(ExpectedCount.once(),
                         requestTo(new URI("http://localhost:8082/v1/validate/amount")))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(content().string(transfer.amount.toString()))
+                .andExpect(content().json(mapper.writeValueAsString(transfer)))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(String.valueOf(amountValidationResponse))
@@ -106,6 +131,25 @@ class IbanValidatorControllerTest {
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             return Unit.INSTANCE;
         });
+
+        ibanValidatorController.ibanList = new ArrayList<>();
     }
+
+    @InterACtTest
+    @CsvSource({"300, DE33500105173249718433, EE441295895115123636"})
+    void v2WhenTransferWithInValidIbanIsReceivedShouldReturnFalse(
+            @AggregateWith(TransferAggregator.class) Transfer transfer
+    ) throws URISyntaxException {
+
+        var result = testRestTemplate.postForEntity("http://localhost:" + port + "/v2/validate/iban", transfer,
+                Boolean.class);
+        inherently(() -> {
+            assertThat(result.getBody()).isEqualTo(false);
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            return Unit.INSTANCE;
+        });
+
+    }
+
 
 }

@@ -17,14 +17,14 @@ public class BankingController {
 
     @PostMapping("/v1/transfer")
     public ResponseEntity<Boolean> sendMoneyV1(@RequestBody Transfer transfer) {
-        var result = restTemplate.postForEntity("http://localhost:8081/v1/validate/iban", transfer.iban, Boolean.class);
+        var result = restTemplate.postForEntity("http://localhost:8081/v1/validate/iban", transfer.fromIban, Boolean.class);
         if(Boolean.TRUE.equals(result.getBody())) {
-            result = restTemplate.postForEntity("http://localhost:8082/v1/validate/amount", transfer.amount, Boolean.class);
+            result = restTemplate.postForEntity("http://localhost:8082/v1/validate/amount", transfer, Boolean.class);
         }
         if(Boolean.TRUE.equals(result.getBody())) {
             return ResponseEntity.ok(true);
         }else {
-            return ResponseEntity.badRequest().body(false);
+            return ResponseEntity.ok().body(false);
         }
     }
 
@@ -34,7 +34,7 @@ public class BankingController {
         if(Boolean.TRUE.equals(result.getBody())) {
             return ResponseEntity.ok(true);
         }else {
-            return ResponseEntity.badRequest().body(false);
+            return ResponseEntity.ok().body(false);
         }
     }
 }

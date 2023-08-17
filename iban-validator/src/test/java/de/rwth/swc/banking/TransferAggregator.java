@@ -12,6 +12,6 @@ public class TransferAggregator implements ArgumentsAggregator {
 
     @Override
     public Object aggregateArguments(ArgumentsAccessor argumentsAccessor, ParameterContext parameterContext) throws ArgumentsAggregationException {
-        return new Transfer(argumentsAccessor.getInteger(0), argumentsAccessor.getString(1));
+        return new Transfer(argumentsAccessor.getInteger(0), argumentsAccessor.getString(1), argumentsAccessor.getString(2));
     }
 }
