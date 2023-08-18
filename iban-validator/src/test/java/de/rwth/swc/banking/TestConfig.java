@@ -1,25 +1,37 @@
 package de.rwth.swc.banking;
 
-import de.rwth.swc.interact.observer.rest.RestTemplateObservationInterceptor;
-import de.rwth.swc.interact.observer.rest.TestRestTemplateObservationInterceptor;
+import de.rwth.swc.interact.rest.observer.WebClientObserver;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.support.WebClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 @TestConfiguration
 public class TestConfig {
 
     @Bean
-    public TestRestTemplate testRestTemplate(
-            RestTemplateBuilder restTemplateBuilder,
-            TestRestTemplateObservationInterceptor interceptor1
-    ) {
-        var testRestTemplate = new TestRestTemplate(restTemplateBuilder);
-        testRestTemplate.getRestTemplate().getInterceptors()
-                .removeIf(it -> it instanceof RestTemplateObservationInterceptor);
+    @Primary
+    public AmountValidationApi amountValidationApi2() {
+        WebClient webClient = WebClient.builder()
+                .baseUrl("http://localhost:8082")
+                .filter(new WebClientObserver(false))
+                .build();
+        HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory
+                .builder(WebClientAdapter.forClient(webClient))
+                .build();
+        return httpServiceProxyFactory.createClient(AmountValidationApi.class);
+    }
 
-        testRestTemplate.getRestTemplate().getInterceptors().add(interceptor1);
-        return testRestTemplate;
+    static IbanValidationApi ibanValidationApi(int port) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl("http://localhost:" + port)
+                .filter(new WebClientObserver(true))
+                .build();
+        HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory
+                .builder(WebClientAdapter.forClient(webClient))
+                .build();
+        return httpServiceProxyFactory.createClient(IbanValidationApi.class);
     }
 }

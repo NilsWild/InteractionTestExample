@@ -9,9 +9,9 @@ import org.junit.jupiter.params.aggregator.ArgumentsAggregator;
 import java.util.Map;
 import java.util.Set;
 
-public class TransferAggregator implements ArgumentsAggregator {
+public class BooleanAggregator implements ArgumentsAggregator {
 
-    public TransferAggregator() {
+    public BooleanAggregator() {
     }
 
     @Override
@@ -19,11 +19,7 @@ public class TransferAggregator implements ArgumentsAggregator {
         return new RestMessage<>(
                 Map.of(),
                 Set.of(),
-                new Transfer(
-                        argumentsAccessor.getInteger(0),
-                        argumentsAccessor.getString(1),
-                        argumentsAccessor.getString(2)
-                )
+                argumentsAccessor.getBoolean(0)
         );
     }
 }

@@ -11,11 +11,11 @@ import java.util.Map;
 @RestController
 public class AmountValidatorController {
 
-    public Map<String,Integer> accounts = new HashMap<>();
+    public Map<String, Integer> accounts = new HashMap<>();
 
     @PostMapping("/v1/validate/amount")
     public ResponseEntity<Boolean> sendMoneyV1(@RequestBody Transfer transfer) {
-        return ResponseEntity.ok(transfer.amount > 0 && transfer.amount <= accounts.getOrDefault(transfer.fromIban.replace(" ",""),-1));
+        return ResponseEntity.ok(transfer.amount > 0 && transfer.amount <= accounts.getOrDefault(transfer.fromIban.replace(" ", ""), -1));
     }
 
 }

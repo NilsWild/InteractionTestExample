@@ -6,7 +6,8 @@ public class Transfer {
     public String fromIban;
     public String toIban;
 
-    public Transfer(){}
+    public Transfer() {
+    }
 
     public Transfer(Integer amount, String fromIban, String toIban) {
         this.amount = amount;
