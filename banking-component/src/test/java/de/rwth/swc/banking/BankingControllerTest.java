@@ -52,11 +52,40 @@ class BankingControllerTest {
     }
 
     @InterACtTest
-    @CsvSource({"500, DE93 5001 0517 6966 2689 58, GE13617195993119486971, true, true"})
-    public void v1WhenValidTransferIsReceivedShouldReturnTrue(
+    @CsvSource({"300, DE19 5001 0517 5326 8513 68, GE13617195993119486971, false"})
+    public void v1WhenTransferIsSendAndIbanValidationFailsItFails(
+            @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer,
+            @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> ibanValidatorResponse) throws JsonProcessingException {
+
+        mockServer.when(
+                request().withMethod(HttpMethod.POST.name())
+                        .withPath("/v1/validate/iban")
+                        .withBody(transfer.getBody().fromIban),
+                Times.exactly(1)
+        ).respond(
+                response().withStatusCode(HttpStatus.OK.value())
+                        .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
+                        .withBody(String.valueOf(ibanValidatorResponse.getBody()))
+        );
+
+        var result = bankingApi.sendMoneyV1(transfer.getBody());
+
+        inherently(() -> {
+            assertThat(result.getBody()).isEqualTo(false);
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            return Unit.INSTANCE;
+        });
+    }
+
+    @InterACtTest
+    @CsvSource({
+            "500, DE93 5001 0517 6966 2689 58, GE13617195993119486971, true, true, true",
+            "200, DE93 5001 0517 6966 2689 58, DE19 5001 0517 5326 8513 68, true, false, false"})
+    public void v1WhenTransferIsSendAndIbanValidationSucceedsItRespondsAccordingToAmountValidation(
             @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer,
             @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> ibanValidatorResponse,
-            @Offset(4) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> amountValidatorResponse) throws JsonProcessingException {
+            @Offset(4) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> amountValidatorResponse,
+            @Offset(5) Boolean expectedResponse) throws JsonProcessingException {
 
         mockServer.when(
                 request().withMethod(HttpMethod.POST.name())
@@ -83,21 +112,23 @@ class BankingControllerTest {
         var result = bankingApi.sendMoneyV1(transfer.getBody());
 
         forExample(() -> {
-            assertThat(result.getBody()).isEqualTo(true);
+            assertThat(result.getBody()).isEqualTo(expectedResponse);
             return Unit.INSTANCE;
         });
         inherently(() -> {
-            assertThat(result.getBody()).isEqualTo(true);
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             return Unit.INSTANCE;
         });
     }
 
     @InterACtTest
-    @CsvSource({"500, DE19 5001 0517 5326 8513 68, GE13617195993119486971, true"})
-    public void v2WhenValidTransferIsReceivedShouldReturnTrue(
+    @CsvSource({
+            "500, DE93 5001 0517 6966 2689 58, GE13617195993119486971, true, true",
+            "200, GE13617195993119486971, DE19 5001 0517 5326 8513 68, false, false"})
+    public void v2WhenTransferIsSendItIsHandled(
             @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer,
-            @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> validationResponse) throws JsonProcessingException {
+            @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> validationResponse,
+            @Offset(4) Boolean expectedResponse) throws JsonProcessingException {
 
         mockServer.when(
                 request().withMethod(HttpMethod.POST.name())
@@ -111,8 +142,13 @@ class BankingControllerTest {
         );
 
         var result = bankingApi.sendMoneyV2(transfer.getBody());
+
+        forExample(() -> {
+            assertThat(result.getBody()).isEqualTo(expectedResponse);
+            return Unit.INSTANCE;
+        });
+
         inherently(() -> {
-            assertThat(result.getBody()).isEqualTo(true);
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             return Unit.INSTANCE;
         });

@@ -83,8 +83,10 @@ class IbanValidatorControllerTest {
     }
 
     @InterACtTest
-    @CsvSource({"300, DE33500105173249718433, EE441295895115123636, true"})
-    public void v2WhenValidTransferIsReceivedShouldReturnTrue(
+    @CsvSource({
+            "300, DE33500105173249718433, EE441295895115123636, true",
+            "300, DE33500105173249718433, EE441295895115123636, false"})
+    public void v2WhenValidIbanIsReceivedShouldReturnDependingOnAmountValidation(
             @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer,
             @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> amountValidationResponse) throws JsonProcessingException {
 
@@ -102,35 +104,7 @@ class IbanValidatorControllerTest {
 
         var result = ibanValidationApi.validateIbanV2(transfer.getBody());
         inherently(() -> {
-            assertThat(result.getBody()).isEqualTo(true);
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            return Unit.INSTANCE;
-        });
-
-        ibanValidatorController.ibanList = new ArrayList<>();
-    }
-
-    @InterACtTest
-    @CsvSource({"300, DE33500105173249718433, EE441295895115123636, false"})
-    void v2WhenTransferWithValidIbanButInvalidAmountIsReceivedShouldReturnFalse(
-            @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer,
-            @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> amountValidationResponse) throws JsonProcessingException {
-
-        ibanValidatorController.ibanList.add(transfer.getBody().fromIban.replace(" ", ""));
-
-        mockServer.when(
-                request().withMethod(HttpMethod.POST.name())
-                        .withPath("/v1/validate/amount")
-                        .withBody(mapper.writeValueAsString(transfer.getBody()))
-        ).respond(
-                response().withStatusCode(HttpStatus.OK.value())
-                        .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(String.valueOf(amountValidationResponse.getBody()))
-        );
-
-        var result = ibanValidationApi.validateIbanV2(transfer.getBody());
-        inherently(() -> {
-            assertThat(result.getBody()).isEqualTo(false);
+            assertThat(result.getBody()).isEqualTo(amountValidationResponse.getBody());
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             return Unit.INSTANCE;
         });
@@ -140,7 +114,7 @@ class IbanValidatorControllerTest {
 
     @InterACtTest
     @CsvSource({"300, DE33500105173249718433, EE441295895115123636"})
-    void v2WhenTransferWithInValidIbanIsReceivedShouldReturnFalse(
+    void v2WhenInvalidIbanIsReceivedShouldReturnFalse(
             @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer
     ) {
 
