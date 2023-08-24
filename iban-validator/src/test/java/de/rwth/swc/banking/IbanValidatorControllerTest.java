@@ -58,7 +58,9 @@ class IbanValidatorControllerTest {
 
     @InterACtTest
     @CsvSource({"DE89370400440532013000"})
-    public void v1WhenValidIbanIsReceivedShouldReturnTrue(@AggregateWith(StringAggregator.class) RestMessage<String> iban) {
+    public void v1WhenValidIbanIsReceivedShouldReturnTrue(
+            @AggregateWith(StringAggregator.class) RestMessage<String> iban
+    ) {
         ibanValidatorController.ibanList.add(iban.getBody().replace(" ", ""));
 
         var result = ibanValidationApi.validateIbanV1(iban.getBody());
@@ -73,7 +75,9 @@ class IbanValidatorControllerTest {
 
     @InterACtTest
     @CsvSource({"DE89370400440532013000"})
-    public void v1WhenInvalidIbanIsReceivedShouldReturnFalse(@AggregateWith(StringAggregator.class) RestMessage<String> iban) {
+    public void v1WhenInvalidIbanIsReceivedShouldReturnFalse(
+            @AggregateWith(StringAggregator.class) RestMessage<String> iban
+    ) {
         var result = ibanValidationApi.validateIbanV1(iban.getBody());
         inherently(() -> {
             assertThat(result.getBody()).isEqualTo(false);
@@ -88,7 +92,8 @@ class IbanValidatorControllerTest {
             "300, DE33500105173249718433, EE441295895115123636, false"})
     public void v2WhenValidIbanIsReceivedShouldReturnDependingOnAmountValidation(
             @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer,
-            @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> amountValidationResponse) throws JsonProcessingException {
+            @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> amountValidationResponse
+    ) throws JsonProcessingException {
 
         ibanValidatorController.ibanList.add(transfer.getBody().fromIban.replace(" ", ""));
         mockServer.when(

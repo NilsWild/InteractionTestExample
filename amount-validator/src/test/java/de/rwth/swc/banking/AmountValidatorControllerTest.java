@@ -32,9 +32,14 @@ class AmountValidatorControllerTest {
 
     @InterACtTest
     @CsvSource({"600, LI3008800671232812246, DK6750511653371535"})
-    public void whenAmountIsBetween0AndBalanceShouldReturnTrue(@AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer) {
+    public void whenAmountIsBetween0AndBalanceShouldReturnTrue(
+            @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer
+    ) {
 
-        amountValidatorController.accounts.put(transfer.getBody().fromIban.replace(" ", ""), transfer.getBody().amount);
+        amountValidatorController.accounts.put(
+                transfer.getBody().fromIban.replace(" ", ""),
+                transfer.getBody().amount
+        );
         var result = amountValidationApi.sendMoneyV1(transfer.getBody());
         inherently(() -> {
             assertThat(result.getBody()).isEqualTo(true);
@@ -47,7 +52,9 @@ class AmountValidatorControllerTest {
 
     @InterACtTest
     @CsvSource({"-600, DK2950519923344578, IS397193876714668732482789"})
-    public void whenAmountIsNegativeShouldReturnFalse(@AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer) {
+    public void whenAmountIsNegativeShouldReturnFalse(
+            @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer
+    ) {
         var result = amountValidationApi.sendMoneyV1(transfer.getBody());
         inherently(() -> {
             assertThat(result.getBody()).isEqualTo(false);

@@ -55,7 +55,8 @@ class BankingControllerTest {
     @CsvSource({"300, DE19 5001 0517 5326 8513 68, GE13617195993119486971, false"})
     public void v1WhenTransferIsSendAndIbanValidationFailsItFails(
             @AggregateWith(TransferAggregator.class) RestMessage<Transfer> transfer,
-            @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> ibanValidatorResponse) throws JsonProcessingException {
+            @Offset(3) @AggregateWith(BooleanAggregator.class) RestMessage<Boolean> ibanValidatorResponse
+    ) {
 
         mockServer.when(
                 request().withMethod(HttpMethod.POST.name())
