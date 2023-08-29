@@ -16,10 +16,10 @@ Two different flows were implemented. The v1 API calls the IbanValidator and Bla
 whereas the v2 API calls the IbanValidator which calls the BlacklistChecker in return. This can be seen in the sequence
 diagrams below:
 
-Money Transfer Api V1:
+#### Money Transfer Api V1:
 ![Money Transfer V1](MoneyTransferAPIv1.svg)
 
-Money Transfer Api V2:
+#### Money Transfer Api V2:
 ![Money Transfer V2](MoneyTransferAPIv2.svg)
 
 ## The tests
