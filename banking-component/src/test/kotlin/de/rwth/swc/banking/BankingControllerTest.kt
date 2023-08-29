@@ -2,18 +2,15 @@ package de.rwth.swc.banking
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import de.rwth.swc.interact.domain.serialization.SerializationConstants
 import de.rwth.swc.interact.junit.jupiter.annotation.InterACtTest
 import de.rwth.swc.interact.junit.jupiter.annotation.Offset
 import de.rwth.swc.interact.rest.RestMessage
-import de.rwth.swc.interact.test.forExample
 import de.rwth.swc.interact.test.inherently
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.aggregator.AggregateWith
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockserver.integration.ClientAndServer

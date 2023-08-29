@@ -10,7 +10,7 @@ class BlacklistCheckController(private val blacklistStore: BlacklistStore) {
 
     @PostMapping("/api/v1/check/blacklist")
     fun checkBlacklistV1(@RequestBody iban: String): ResponseEntity<BlacklistCheckResponse> {
-        return when(blacklistStore.isBlacklisted(iban)) {
+        return when (blacklistStore.isBlacklisted(iban)) {
             true -> ResponseEntity.ok(BlacklistCheckResponse.Blacklisted(blacklistStore.getReason(iban)))
             false -> ResponseEntity.ok(BlacklistCheckResponse.NotBlacklisted)
         }

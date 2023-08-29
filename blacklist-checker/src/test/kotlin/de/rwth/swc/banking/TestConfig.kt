@@ -1,9 +1,6 @@
 package de.rwth.swc.banking
 
 import de.rwth.swc.interact.rest.observer.WebClientObserver
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext
-import org.springframework.context.annotation.Bean
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.support.WebClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory
