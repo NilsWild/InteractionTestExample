@@ -13,11 +13,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.params.aggregator.AggregateWith
 import org.junit.jupiter.params.provider.CsvSource
+import org.mockserver.configuration.Configuration
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.matchers.Times
 import org.mockserver.model.HttpRequest
 import org.mockserver.model.HttpResponse
 import org.mockserver.model.MediaType
+import org.slf4j.event.Level
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -258,7 +260,7 @@ internal class BankingControllerTest {
 
         @InterACtTest
         @CsvSource(
-            "DE93 5001 0517 6966 2689 58, GE13617195993119486971, 500, true"
+            "DE93 5001 0517 6966 2689 58, GE13617195993119486971, 300, true"
         )
         fun `when IBAN validation succeeds and the account has sufficient funds the transfer succeeds`(
             @AggregateWith(TransferAggregator::class) transfer: RestMessage<Transfer>,
@@ -292,7 +294,7 @@ internal class BankingControllerTest {
         @JvmStatic
         @BeforeAll
         fun init() {
-            mockServer = ClientAndServer.startClientAndServer(8082)
+            mockServer = ClientAndServer.startClientAndServer(Configuration.configuration().logLevel(Level.ERROR), 8082)
         }
 
         @JvmStatic

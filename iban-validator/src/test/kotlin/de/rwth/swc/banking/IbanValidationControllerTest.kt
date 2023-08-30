@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import de.rwth.swc.interact.junit.jupiter.annotation.InterACtTest
 import de.rwth.swc.interact.junit.jupiter.annotation.Offset
 import de.rwth.swc.interact.rest.RestMessage
+import de.rwth.swc.interact.test.PropertyBasedAssertionError
 import de.rwth.swc.interact.test.inherently
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
@@ -12,11 +13,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.params.aggregator.AggregateWith
 import org.junit.jupiter.params.provider.CsvSource
+import org.mockserver.configuration.Configuration
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.matchers.Times
 import org.mockserver.model.HttpRequest
 import org.mockserver.model.HttpResponse
 import org.mockserver.model.MediaType
+import org.slf4j.event.Level
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -106,7 +109,7 @@ internal class IbanValidationControllerTest {
         @CsvSource(
             "EE441295895115123636, true",
         )
-        fun `when a valid IBAN is provided it and the blacklist check succeeds it should respond that the iban is valid`(
+        fun `when a valid IBAN is provided and the blacklist check succeeds it should respond that the iban is valid`(
             @AggregateWith(IbanAggregator::class) iban: RestMessage<String>,
             @Offset(1) @AggregateWith(BlacklistCheckResponseAggregator::class) blacklistCheckResponse: RestMessage<BlacklistCheckResponse>
         ) {
@@ -120,7 +123,9 @@ internal class IbanValidationControllerTest {
                     .withContentType(MediaType.APPLICATION_JSON)
                     .withBody(mapper.writeValueAsString(blacklistCheckResponse.body))
             )
+
             val result = ibanValidationApi.validateIbanV2(iban.body)
+
             inherently {
                 Assertions.assertThat(result.body).isInstanceOf(IbanValidationResponse.Valid::class.java)
                 Assertions.assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
@@ -146,7 +151,7 @@ internal class IbanValidationControllerTest {
         @JvmStatic
         @BeforeAll
         fun init() {
-            mockServer = ClientAndServer.startClientAndServer(8082)
+            mockServer = ClientAndServer.startClientAndServer(Configuration.configuration().logLevel(Level.ERROR),8082)
         }
 
         @JvmStatic
