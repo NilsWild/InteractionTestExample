@@ -39,7 +39,7 @@ internal class BlacklistCheckControllerTest {
     fun `when IBAN is on blacklist should report a match`(
         @AggregateWith(IbanAggregator::class) iban: RestMessage<String>
     ) {
-        blacklistStore.addIban(iban.body, "Test")
+        blacklistStore.addIban(iban.body, "IBAN is suspicious")
         val result = blacklistCheckerApi.checkBlacklistV1(iban.body)
         inherently {
             assertThat(result.body).isInstanceOf(BlacklistCheckResponse.Blacklisted::class.java)
